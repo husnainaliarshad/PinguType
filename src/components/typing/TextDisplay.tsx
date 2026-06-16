@@ -11,32 +11,38 @@ const CharSpan = memo(function CharSpan({ charState, onClick }: CharSpanProps) {
 
   if (char === '\n') {
     return (
-      <br
-        data-index={index}
-        data-status={status}
-      />
+      <>
+        <span
+          data-index={index}
+          data-status={status}
+          className="select-none text-espresso-muted text-xs align-middle mx-0.5"
+        >
+          ↵
+        </span>
+        <br data-index={index} data-status={status} />
+      </>
     )
   }
 
-  let className = 'transition-colors duration-100'
+  let className = 'relative inline transition-colors duration-100'
 
   switch (status) {
     case 'untouched':
-      className += ' text-text-muted/50'
+      className += ' text-espresso-muted'
       break
     case 'correct':
-      className += ' text-correct animate-[char-pop_150ms_ease-out]'
+      className += ' text-espresso font-semibold animate-[char-pop_150ms_ease-out]'
       break
     case 'incorrect':
       className +=
-        ' text-incorrect underline decoration-incorrect/60 decoration-wavy underline-offset-4 animate-[char-shake_250ms_ease-out]'
+        ' text-burgundy bg-burgundy/10 border-b-2 border-burgundy animate-[char-shake_250ms_ease-out]'
       break
     case 'current':
       className +=
-        ' text-current-char bg-current-char/10 rounded-sm -mx-px px-px'
+        ' text-espresso font-semibold border-b-[3px] border-espresso animate-[underline-blink_800ms_ease-in-out_infinite] pb-[2px]'
       break
     case 'extra':
-      className += ' text-incorrect/70 line-through'
+      className += ' text-burgundy/60 line-through'
       break
   }
 
@@ -89,7 +95,7 @@ export default function TextDisplay({ chars, onCharClick }: TextDisplayProps) {
   return (
     <div
       ref={containerRef}
-      className="font-mono text-xl sm:text-2xl leading-relaxed tracking-wide whitespace-pre-wrap break-words select-none max-h-[60vh] overflow-y-auto scrollbar-thin"
+      className="font-mono text-lg sm:text-xl leading-loose tracking-wide whitespace-pre-wrap break-words select-none max-h-[60vh] overflow-y-auto scrollbar-thin text-espresso"
       aria-live="polite"
       aria-label="Text to type"
     >

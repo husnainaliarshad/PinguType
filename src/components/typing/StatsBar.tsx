@@ -32,19 +32,19 @@ const statConfigs = [
 export default function StatsBar({ stats }: StatsBarProps) {
   return (
     <div
-      className="grid grid-cols-4 gap-2 sm:gap-4"
+      className="grid grid-cols-4 gap-2 sm:gap-3"
       role="status"
       aria-label="Typing statistics"
     >
       {statConfigs.map(({ label, key, format }) => (
         <div
           key={key}
-          className="flex flex-col items-center rounded-xl bg-bg-elevated border border-surface/30 p-2 sm:p-3"
+          className="flex flex-col items-center rounded-lg bg-sand-light border border-espresso/10 p-2 sm:p-3"
         >
-          <span className="text-[10px] sm:text-xs font-medium text-text-muted uppercase tracking-wider">
+          <span className="text-[10px] sm:text-xs font-medium text-espresso-muted uppercase tracking-wider">
             {label}
           </span>
-          <span className="text-lg sm:text-2xl font-bold text-text tabular-nums mt-0.5">
+          <span className="text-lg sm:text-xl font-bold text-espresso tabular-nums mt-0.5">
             {format(stats[key])}
           </span>
         </div>

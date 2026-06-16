@@ -1,9 +1,8 @@
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect } from 'react'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import TextDisplay from './TextDisplay'
 import TypingInput from './TypingInput'
-import StatsBar from './StatsBar'
 import type { TypingSnapshot, TypingStats } from '@/types/engine'
 
 interface TypingAreaProps {
@@ -21,7 +20,7 @@ interface TypingAreaProps {
 
 export default function TypingArea({
   snapshot,
-  stats,
+  stats: _stats,
   isReady,
   isActive,
   isComplete,
@@ -32,8 +31,6 @@ export default function TypingArea({
   onKeyDown,
 }: TypingAreaProps) {
   const inputRef = useRef<HTMLInputElement>(null)
-  const lastAnnouncementRef = useRef(0)
-  const [liveMessage, setLiveMessage] = useState('')
 
   useEffect(() => {
     if (isReady || isActive) {
@@ -52,34 +49,17 @@ export default function TypingArea({
     return () => window.removeEventListener('keydown', handler)
   }, [isActive, isReady, onKeyDown])
 
-  useEffect(() => {
-    if (isComplete) {
-      setLiveMessage('Session complete. Check your results below.')
-      return
-    }
-    if (!isActive) {
-      setLiveMessage('')
-      return
-    }
-    const now = Date.now()
-    if (now - lastAnnouncementRef.current < 3000) return
-    lastAnnouncementRef.current = now
-    setLiveMessage(
-      `WPM: ${stats.wpm.toFixed(0)}. Accuracy: ${stats.accuracy.toFixed(0)} percent.`,
-    )
-  }, [isActive, isComplete, stats.wpm, stats.accuracy])
-
   if (!isReady && !isActive && !isComplete) {
     return (
       <Card className="flex flex-col items-center justify-center gap-6 p-8 sm:p-12 min-h-[320px]">
         {isLoading ? (
-          <p className="text-lg text-text-muted" role="status">
-            Loading text...
+          <p className="text-lg text-espresso-muted" role="status">
+            Extracting text...
           </p>
         ) : (
           <>
-            <p className="text-lg text-text-muted">
-              Ready to test your speed?
+            <p className="text-lg text-espresso-muted">
+              Upload a PDF to begin.
             </p>
             <Button size="lg" onClick={onStart}>
               Start Typing
@@ -93,12 +73,13 @@ export default function TypingArea({
   if (isComplete) {
     return (
       <Card className="flex flex-col items-center justify-center gap-6 p-8 sm:p-12 min-h-[320px]">
-        <StatsBar stats={stats} />
-        <p className="text-lg text-text-muted mt-2">Session complete!</p>
+        <p className="text-lg text-espresso font-semibold">
+          Chunk complete.
+        </p>
         <div className="flex gap-3">
-          <Button onClick={onStart}>Try Again</Button>
+          <Button onClick={onStart}>Continue</Button>
           <Button variant="secondary" onClick={onReset}>
-            Back
+            Restart
           </Button>
         </div>
       </Card>
@@ -113,30 +94,16 @@ export default function TypingArea({
   }
 
   return (
-    <div className="flex flex-col gap-5">
-      <StatsBar stats={stats} />
-
-      <div className="sr-only" aria-live="polite" aria-atomic="false">
-        {liveMessage}
-      </div>
-
-      <Card
-        className="relative p-6 sm:p-8 cursor-text overflow-hidden"
-        onClick={(e) => {
-          if (e.target === e.currentTarget) {
-            inputRef.current?.focus({ preventScroll: true })
-          }
-        }}
-      >
-        <TextDisplay chars={snapshot.chars} onCharClick={handleJumpToChar} />
-        <TypingInput ref={inputRef} disabled={!isActive && !isReady} />
-      </Card>
-
-      <div className="flex justify-center">
-        <Button variant="ghost" onClick={onReset}>
-          Reset
-        </Button>
-      </div>
-    </div>
+    <Card
+      className="relative p-6 sm:p-8 cursor-text overflow-hidden min-h-[320px]"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          inputRef.current?.focus({ preventScroll: true })
+        }
+      }}
+    >
+      <TextDisplay chars={snapshot.chars} onCharClick={handleJumpToChar} />
+      <TypingInput ref={inputRef} disabled={!isActive && !isReady} />
+    </Card>
   )
 }
