@@ -1,18 +1,8 @@
 import { useEffect, useState, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { AlertCircle, RefreshCw, BarChart3, ChevronLeft, ChevronRight } from 'lucide-react'
+import { AlertCircle, ChevronLeft, ChevronRight, Upload } from 'lucide-react'
 import TypingArea from '@/components/typing/TypingArea'
-import Select from '@/components/ui/Select'
 import Button from '@/components/ui/Button'
 import { useTypingSession } from '@/hooks/useTypingSession'
-import { listTextSources } from '@/text'
-
-const sources = listTextSources()
-
-const sourceOptions = sources.map((s) => ({
-  value: s.id,
-  label: s.name,
-}))
 
 function PaginationBar({
   pageInfo,
@@ -88,14 +78,7 @@ function PaginationBar({
 }
 
 export default function TypingPage() {
-  const navigate = useNavigate()
   const session = useTypingSession()
-
-  useEffect(() => {
-    if (session.phase === 'idle' && !session.text && !session.isLoading) {
-      session.loadText('library')
-    }
-  }, [session.phase, session.text, session.isLoading, session.loadText])
 
   useEffect(() => {
     if (
@@ -115,49 +98,23 @@ export default function TypingPage() {
   const showPagination =
     session.pageInfo !== null && session.pageInfo.total > 1
 
+  const needsUpload = session.phase === 'idle' && !session.text && !session.isLoading
+
   return (
-    <div className="flex flex-col gap-4 max-w-3xl mx-auto">
+    <div className="flex flex-col gap-4 max-w-3xl mx-auto pt-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h2 className="text-sm font-semibold text-text-muted uppercase tracking-wider">
-          Practice Session
+          PDF Typing Practice
         </h2>
 
-        <div className="flex items-center gap-2">
-          <Select
-            options={sourceOptions}
-            value={session.sourceId}
-            onChange={(e) => session.loadText(e.target.value)}
-            className="w-40"
-          />
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => session.loadText(session.sourceId)}
-            disabled={session.isLoading}
-            aria-label="Reload text"
-          >
-            <RefreshCw
-              size={16}
-              className={session.isLoading ? 'animate-spin' : ''}
-            />
-          </Button>
-          {session.phase === 'complete' && (
-            <Button
-              size="sm"
-              onClick={() =>
-                navigate('/results', {
-                  state: {
-                    stats: session.stats,
-                    sourceId: session.sourceId,
-                  },
-                })
-              }
-            >
-              <BarChart3 size={16} className="mr-1.5" />
-              View Results
-            </Button>
-          )}
-        </div>
+        <Button
+          size="sm"
+          onClick={() => session.loadText('pdf')}
+          disabled={session.isLoading}
+        >
+          <Upload size={16} className="mr-1.5" />
+          {needsUpload ? 'Upload PDF' : 'New PDF'}
+        </Button>
       </div>
 
       {session.error && (

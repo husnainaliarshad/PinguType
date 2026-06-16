@@ -24,3 +24,4 @@
 
 # typing-flow
 - Auto-advance to the next chunk when the user finishes typing the current one — no manual pagination step needed. Confidence: 0.70
+- Only PDF typing mode is needed — do not build or maintain other text source modes. Confidence: 0.85
