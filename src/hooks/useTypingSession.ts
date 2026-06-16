@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react'
 import { useTimer } from './useTimer'
 import { useTypingEngine } from './useTypingEngine'
 import { useTextSource } from './useTextSource'
-import type { TextSourceConfig } from '@/types/text'
+import type { TextSourceConfig, PageInfo } from '@/types/text'
 import type { TypingSnapshot, TypingStats } from '@/types/engine'
 
 export type SessionPhase = 'idle' | 'ready' | 'active' | 'complete'
@@ -15,16 +15,26 @@ interface UseTypingSessionReturn {
   isLoading: boolean
   error: string | null
   sourceId: string
-  loadText: (sourceId: string, config?: TextSourceConfig) => Promise<void>
+  pageInfo: PageInfo | null
+  loadText: (sourceId: string, config?: TextSourceConfig) => Promise<string>
   startSession: () => void
+  jumpToChar: (index: number) => void
   handleKeyDown: (e: KeyboardEvent) => void
   resetSession: () => void
+  nextChunk: () => Promise<void>
+  prevChunk: () => Promise<void>
+  goToChunk: (n: number) => Promise<void>
 }
 
 export function useTypingSession(): UseTypingSessionReturn {
   const [phase, setPhase] = useState<SessionPhase>('idle')
   const timer = useTimer()
   const textSource = useTextSource()
+  const {
+    nextChunk: textNextChunk,
+    prevChunk: textPrevChunk,
+    goToChunk: textGoToChunk,
+  } = textSource
 
   const getCurrentTime = useCallback(() => timer.elapsed, [timer.elapsed])
 
@@ -37,19 +47,22 @@ export function useTypingSession(): UseTypingSessionReturn {
     snapshot,
     stats,
     init: engineInit,
+    jumpTo: engineJumpTo,
     handleKeyDown,
     reset: engineReset,
   } = useTypingEngine(getCurrentTime, onStarted)
 
   const loadText = useCallback(
-    async (sourceId: string, config?: TextSourceConfig) => {
+    async (sourceId: string, config?: TextSourceConfig): Promise<string> => {
       setPhase('idle')
       engineReset()
       timer.reset()
-      await textSource.loadText(sourceId, config)
+      const newText = await textSource.loadText(sourceId, config)
+      engineInit(newText)
       setPhase('ready')
+      return newText
     },
-    [engineReset, timer, textSource],
+    [engineReset, engineInit, timer, textSource],
   )
 
   const startSession = useCallback(() => {
@@ -64,6 +77,37 @@ export function useTypingSession(): UseTypingSessionReturn {
     timer.reset()
     setPhase('idle')
   }, [engineReset, timer])
+
+  const jumpToChar = useCallback((index: number) => {
+    engineJumpTo(textSource.text, index)
+  }, [engineJumpTo, textSource.text])
+
+  const nextChunk = useCallback(async () => {
+    setPhase('idle')
+    engineReset()
+    timer.reset()
+    const newText = await textNextChunk()
+    engineInit(newText)
+    setPhase('ready')
+  }, [engineReset, engineInit, timer, textNextChunk])
+
+  const prevChunk = useCallback(async () => {
+    setPhase('idle')
+    engineReset()
+    timer.reset()
+    const newText = await textPrevChunk()
+    engineInit(newText)
+    setPhase('ready')
+  }, [engineReset, engineInit, timer, textPrevChunk])
+
+  const goToChunk = useCallback(async (n: number) => {
+    setPhase('idle')
+    engineReset()
+    timer.reset()
+    const newText = await textGoToChunk(n)
+    engineInit(newText)
+    setPhase('ready')
+  }, [engineReset, engineInit, timer, textGoToChunk])
 
   useEffect(() => {
     if (snapshot.isComplete && phase === 'active') {
@@ -80,9 +124,14 @@ export function useTypingSession(): UseTypingSessionReturn {
     isLoading: textSource.isLoading,
     error: textSource.error,
     sourceId: textSource.sourceId,
+    pageInfo: textSource.pageInfo,
     loadText,
     startSession,
+    jumpToChar,
     handleKeyDown,
     resetSession,
+    nextChunk,
+    prevChunk,
+    goToChunk,
   }
 }

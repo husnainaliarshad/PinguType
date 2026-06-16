@@ -15,6 +15,7 @@ interface TypingAreaProps {
   isLoading: boolean
   onStart: () => void
   onReset: () => void
+  onJumpToChar: (index: number) => void
   onKeyDown: (e: KeyboardEvent) => void
 }
 
@@ -27,6 +28,7 @@ export default function TypingArea({
   isLoading,
   onStart,
   onReset,
+  onJumpToChar,
   onKeyDown,
 }: TypingAreaProps) {
   const inputRef = useRef<HTMLInputElement>(null)
@@ -35,7 +37,7 @@ export default function TypingArea({
 
   useEffect(() => {
     if (isReady || isActive) {
-      inputRef.current?.focus()
+      inputRef.current?.focus({ preventScroll: true })
     }
   }, [isReady, isActive])
 
@@ -103,6 +105,13 @@ export default function TypingArea({
     )
   }
 
+  const handleJumpToChar = (index: number) => {
+    onJumpToChar(index)
+    requestAnimationFrame(() => {
+      inputRef.current?.focus({ preventScroll: true })
+    })
+  }
+
   return (
     <div className="flex flex-col gap-5">
       <StatsBar stats={stats} />
@@ -112,10 +121,14 @@ export default function TypingArea({
       </div>
 
       <Card
-        className="relative p-6 sm:p-8 cursor-text min-h-[160px]"
-        onClick={() => inputRef.current?.focus()}
+        className="relative p-6 sm:p-8 cursor-text overflow-hidden"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            inputRef.current?.focus({ preventScroll: true })
+          }
+        }}
       >
-        <TextDisplay chars={snapshot.chars} />
+        <TextDisplay chars={snapshot.chars} onCharClick={handleJumpToChar} />
         <TypingInput ref={inputRef} disabled={!isActive && !isReady} />
       </Card>
 

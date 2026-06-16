@@ -23,7 +23,7 @@ const TypingInput = forwardRef<HTMLInputElement, TypingInputProps>(
           }
         }}
         aria-label="Type the text shown above"
-        className="absolute inset-0 opacity-0"
+        className="pointer-events-none absolute inset-0 opacity-0"
       />
     )
   },

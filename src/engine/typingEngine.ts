@@ -23,6 +23,30 @@ export function createInitialSnapshot(text: string): TypingSnapshot {
   }
 }
 
+export function createJumpSnapshot(
+  text: string,
+  targetIndex: number,
+): TypingSnapshot {
+  const chars = text.split('').map((char, index) => {
+    if (index < targetIndex) return { char, index, status: 'correct' as const }
+    if (index === targetIndex) return { char, index, status: 'current' as const }
+    return { char, index, status: 'untouched' as const }
+  })
+
+  return {
+    chars,
+    cursorPosition: targetIndex,
+    totalKeystrokes: 0,
+    correctKeystrokes: 0,
+    incorrectKeystrokes: 0,
+    extraKeystrokes: 0,
+    backspaceCount: 0,
+    startTime: null,
+    endTime: null,
+    isComplete: false,
+  }
+}
+
 export function processKeystroke(
   snapshot: TypingSnapshot,
   key: string,

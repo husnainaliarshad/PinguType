@@ -1,6 +1,7 @@
 import { useReducer, useCallback, useMemo, useRef } from 'react'
 import {
   createInitialSnapshot,
+  createJumpSnapshot,
   processKeystroke,
   calculateStats,
 } from '@/engine/typingEngine'
@@ -9,6 +10,7 @@ import type { TypingSnapshot, TypingStats } from '@/types/engine'
 type EngineAction =
   | { type: 'KEYSTROKE'; key: string; currentTime: number }
   | { type: 'INIT'; text: string }
+  | { type: 'JUMP'; text: string; index: number }
   | { type: 'RESET' }
 
 function engineReducer(
@@ -18,6 +20,8 @@ function engineReducer(
   switch (action.type) {
     case 'INIT':
       return createInitialSnapshot(action.text)
+    case 'JUMP':
+      return createJumpSnapshot(action.text, action.index)
     case 'KEYSTROKE':
       return processKeystroke(state, action.key, action.currentTime)
     case 'RESET':
@@ -36,6 +40,7 @@ interface UseTypingEngineReturn {
   snapshot: TypingSnapshot
   stats: TypingStats
   init: (text: string) => void
+  jumpTo: (text: string, index: number) => void
   handleKeyDown: (e: KeyboardEvent) => void
   reset: () => void
   isActive: boolean
@@ -60,6 +65,10 @@ export function useTypingEngine(
   const init = useCallback((text: string) => {
     hasStartedRef.current = false
     dispatch({ type: 'INIT', text })
+  }, [])
+
+  const jumpTo = useCallback((text: string, index: number) => {
+    dispatch({ type: 'JUMP', text, index })
   }, [])
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -106,6 +115,7 @@ export function useTypingEngine(
     snapshot,
     stats,
     init,
+    jumpTo,
     handleKeyDown,
     reset,
     isActive,
